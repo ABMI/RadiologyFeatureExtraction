@@ -20,14 +20,19 @@
 #' @param latentDim
 #' 
 #' @export
-setVanillaAutoencoder <- function(epochs = 10,
+setVanillaAutoencoder <- function(valProp = 0.3,
+                                  epochs = 10,
                                   batch_size = batch_size,
                                   latentDim = latentDim,
                                   optimizer = 'adadelta', 
                                   loss = 'binary_crossentropy',
                                   imageProcessingSettings = imageProcessingSettings
                                   ){
+    if(valProp>1 | valProp<0)
+        stop ("valProp should be between 0 and 1")
+    
     encoderSettings <- list(model = 'fitVanillaAutoencoder',
+                            valProp = valProp,
                             epochs = as.integer(epochs),
                             batch_size = as.integer(batch_size),
                             latentDim = as.integer(latentDim),
@@ -36,5 +41,38 @@ setVanillaAutoencoder <- function(epochs = 10,
                             imageProcessingSettings = imageProcessingSettings
                             )
     class(encoderSettings) <- 'encoderSettings'
+    return(encoderSettings)
 }
 
+#' Creating setting for 2-dimensional convolutional autoencoder
+#' @param batch_size
+#' @param latentDim
+#' @param latentDim
+#' 
+#' @export
+set2DConvAutoencoder<-function(valProp = 0.3,
+                               epochs = 10,
+                               batch_size = batch_size,
+                               layer = 3,
+                               optimizer = 'adadelta', 
+                               loss = 'binary_crossentropy',
+                               imageProcessingSettings = imageProcessingSettings){
+    if(valProp>1 | valProp<0)
+        stop ("valProp should be between 0 and 1")
+    
+    if ( !(length(imageProcessingSettings$roiWidth) %/% (2^layer)==0) & (length(imageProcessingSettings$roiHeight) %/% (2^layer)==0) )
+        stop ("the length of roiWidth and roiHeight should be multipliers of 2^layer")
+    
+    encoderSettings <- list(model = 'fit2DConvAutoencoder',
+                            valProp = valProp,
+                            epochs = as.integer(epochs),
+                            batch_size = as.integer(batch_size),
+                            #latentDim = as.integer(latentDim),
+                            optimizer = optimizer,
+                            loss = loss,
+                            imageProcessingSettings = imageProcessingSettings
+    )
+    class(encoderSettings) <- 'encoderSettings'
+    return(encoderSettings)
+    
+}

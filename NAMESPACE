@@ -2,9 +2,11 @@
 
 export(SetImageProcessing)
 export(buildEncoder)
+export(fit2DConvAutoencoder)
 export(fitVanillaAutoencoder)
 export(meltDim)
 export(preProcessing)
 export(reconDim)
 export(reverseProcessing)
+export(set2DConvAutoencoder)
 export(setVanillaAutoencoder)

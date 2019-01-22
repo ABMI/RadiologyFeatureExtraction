@@ -123,6 +123,7 @@ preProcessing<-function(x=NULL,
 #' 
 #' @export
 meltDim<-function(x,
+                  convolution=F,
                   imageProcessingSettings){
     
     if(class(imageProcessingSettings) != 'imageProcessingSettings')
@@ -131,11 +132,14 @@ meltDim<-function(x,
     indexDim = imageProcessingSettings$indexDim
     channelDim = imageProcessingSettings$channelDim
     
-    # x<-array(unlist(x), dim = c(length(imageProcessingSettings$roiWidth), length(imageProcessingSettings$roiHeight), length(x)))
-    # if(indexDim==1) x<-aperm(x,c(3,1,2))
-    # x <- x %>% apply(indexDim, as.numeric) %>% t()
-    x<-array(unlist(x), dim = c(length(imageProcessingSettings$roiWidth)*length(imageProcessingSettings$roiHeight), length(x)))
-    x<-aperm(x,c(2,1))
+    if(convolution){
+        x<-array(unlist(x), dim = c(length(imageProcessingSettings$roiWidth), length(imageProcessingSettings$roiHeight), length(x)))
+        if(indexDim==1) x<-aperm(x,c(3,1,2))
+    } else {
+        x<-array(unlist(x), dim = c(length(imageProcessingSettings$roiWidth)*length(imageProcessingSettings$roiHeight), length(x)))
+        if(indexDim==1) x<-aperm(x,c(2,1))
+        # x <- x %>% apply(indexDim, as.numeric) %>% t()
+    }
     return(x)
 }
 
