@@ -2,9 +2,9 @@
 
 export(SetImageProcessing)
 export(buildEncoder)
+export(fitVanillaAutoencoder)
 export(meltDim)
 export(preProcessing)
 export(reconDim)
 export(reverseProcessing)
-import(keras)
-import(dplyr)
+export(setVanillaAutoencoder)
