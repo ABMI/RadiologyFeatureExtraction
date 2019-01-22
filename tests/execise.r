@@ -57,10 +57,11 @@ par(mfcol=c(2,4))
 for(i in seq(sampleN/2)){
     image(testData.processed[[i]],col=gray(12:1/12))
 }
+
 testData.melted<-meltDim(testData.processed, imageProcessingSettings)
 predicted <- predict(autoencoder$encoderModel, testData.melted, batch_size = 100L)
-predictedImages <- array(unlist(predicted), dim = c(dim(predicted)[1], length(imageProcessingSettings$roiWidth), length(imageProcessingSettings$roiHeight)))
-
+predictedImages <-reconDim(predicted,imageProcessingSettings)
+predictedImages <- reverseProcessing(predictedImages)
 
 for(i in seq(sampleN/2)){
     image(predictedImages[i,,],col=gray(12:1/12))

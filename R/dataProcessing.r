@@ -156,7 +156,8 @@ reconDim <- function(x,
     indexDim = imageProcessingSettings$indexDim
     channelDim = imageProcessingSettings$channelDim
     
-    
+    x<-array(unlist(x), dim = c(dim(x)[1], length(imageProcessingSettings$roiWidth), length(imageProcessingSettings$roiHeight)))
+    return(x)
 }
 
 #' Reverse-processing function for the data
@@ -169,8 +170,7 @@ reconDim <- function(x,
 #' @param dimConcat           dimConcat indicates the index dimension. dimConcat should be NULL or an integer. if dimConcat is not null, the array will be concatenated along this specified dimension
 #' 
 #' @export
-reverseProcessing<-function(x,
-                            sampleN=10){
+reverseProcessing<-function(x){
     normalization=imageProcessingSettings$normalization
     maxLimit = imageProcessingSettings$maxLimit
     minLimit = imageProcessingSettings$minLimit
@@ -184,16 +184,7 @@ reverseProcessing<-function(x,
     if(normalization =="MinMaxNorm") {
         x<- x*(maxLimit - minLimit)+minLimit
     }
-    if(!is.null(dimConcat)){
-        x <- x %>% apply(meltDim, as.numeric) %>% t()
-    }
-    
-    
-    
-    if(method =="minMaxNorm") x<-x/ ( max(x,na.rm =TRUE) - min(x,na.rm =TRUE))
-    if(meltDim){
-        x <- x %>% apply(1, as.numeric) %>% t()
-    }
+    return(x)
 }
 
 
