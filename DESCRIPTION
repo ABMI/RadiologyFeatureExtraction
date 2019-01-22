@@ -1,10 +1,10 @@
 Package: RadiologyFeatureExtraction
-Title: Feature Extraction for Radiology dadta
+Title: Feature Extraction for Radiology data
 Version: 0.0.0.1000
 Date: 2019-01-21
 Authors: Seng Chan You <applegna@gmail.com> [aut,cre],
          Kwang Soo Jeong <contact@neonkid.xyz> [aut]
-Description: Feature Extraction Package for Radiology dadta
+Description: Feature Extraction Package for Radiology data
 Depends: R (>= 3.4.4)
 Imports:
     keras,
