@@ -187,25 +187,3 @@ reverseProcessing<-function(x){
     return(x)
 }
 
-
-#' Reverse-processing function for the data
-#' 
-#' @details 
-#' This function is for preprocessing fo the data, including normalization, resizing, and dimension concat
-#' 
-#' @param x                   An object of data
-#' @param normalization       method for normalization. 'MinMaxNorm' is min-max normalization
-#' @param dimConcat           dimConcat indicates the index dimension. dimConcat should be NULL or an integer. if dimConcat is not null, the array will be concatenated along this specified dimension
-#' 
-#' @export
-reconDim<-function(array,
-                   imageProcessingSettings){
-    meltDim = imageProcessingSettings$meltDim
-    channelDim = imageProcessingSettings$channelDim
-    
-    sampleN<-dim(array)[meltDim]
-    
-    if(meltDim==3){
-        array<-array(unlist(array), dim = c(sampleN, length(ROI2D[[1]]), length(ROI2D[[2]])))
-    }
-}
