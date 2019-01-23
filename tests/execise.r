@@ -16,7 +16,7 @@ testSampleIndex <- sample(nrow(testData),4)
 sampleViewPanels <- c(2,4)
 
 ##Hyperparameter
-batch_size = 100
+batchSize = 100
 latentDim = 10
 epochs = 10
 
@@ -61,7 +61,7 @@ testData.melted<-meltDim(testData.processed,imageProcessingSettings)
 #build autoencoder
 encoderSetting<-setVanillaAutoencoder (valProp = 0.3,
                                        epochs = 10,
-                                       batch_size = batch_size,
+                                       batchSize = batchSize,
                                        latentDim = latentDim,
                                        optimizer = 'adadelta', 
                                        loss = 'binary_crossentropy',
@@ -70,7 +70,7 @@ encoderSetting<-setVanillaAutoencoder (valProp = 0.3,
 autoencoder<-fitVanillaAutoencoder(trainData=trainData.melted,
                                    valProp = encoderSetting$valProp,
                                    epochs = encoderSetting$epochs,
-                                   batch_size = encoderSetting$batch_size,
+                                   batchSize = encoderSetting$batchSize,
                                    latentDim = encoderSetting$latentDim,
                                    optimizer = encoderSetting$optimizer, 
                                    loss = encoderSetting$loss,
@@ -79,7 +79,7 @@ autoencoder<-fitVanillaAutoencoder(trainData=trainData.melted,
 
 
 ##Prediction
-predicted <- predict(autoencoder$encoderModel, testData.melted, batch_size = 100L)
+predicted <- predict(autoencoder$encoderModel, testData.melted, batchSize = 100L)
 predictedImages <-reconDim(predicted,imageProcessingSettings)
 predictedImages <- reverseProcessing(predictedImages)
 
@@ -124,7 +124,7 @@ dim(testData.ordered)
 #build autoencoder
 encoderSetting<-set2DConvAutoencoder (valProp = 0.3,
                                       epochs = epochs,
-                                      batch_size = batch_size,
+                                      batchSize = batchSize,
                                       poolingLayerNum = 3,
                                       poolSize = 2,
                                       optimizer = 'adadelta', 
@@ -135,7 +135,7 @@ debug(fit2DConvAutoencoder)
 autoencoder<-fit2DConvAutoencoder(trainData=trainData.ordered,
                                   valProp = encoderSetting$valProp,
                                   epochs = encoderSetting$epochs,
-                                  batch_size = encoderSetting$batch_size,
+                                  batchSize = encoderSetting$batchSize,
                                   poolingLayerNum = encoderSetting$poolingLayerNum,
                                   poolSize = encoderSetting$poolSize,
                                   optimizer = encoderSetting$optimizer, 
@@ -144,7 +144,7 @@ autoencoder<-fit2DConvAutoencoder(trainData=trainData.ordered,
 )
 
 ##Prediction
-predicted <- predict(autoencoder$encoderModel, testData.ordered, batch_size = 100L)
+predicted <- predict(autoencoder$encoderModel, testData.ordered, batchSize = 100L)
 
 predictedImages <-reconDim(predicted,convolution=TRUE,imageProcessingSettings)
 predictedImages <- reverseProcessing(predictedImages)

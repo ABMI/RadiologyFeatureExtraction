@@ -15,14 +15,14 @@
 # limitations under the License.
 
 #' Creating setting for Vanilla autoencoder
-#' @param batch_size
+#' @param batchSize
 #' @param latentDim
 #' @param latentDim
 #' 
 #' @export
 setVanillaAutoencoder <- function(valProp = 0.3,
                                   epochs = 10,
-                                  batch_size = batch_size,
+                                  batchSize = batchSize,
                                   latentDim = latentDim,
                                   optimizer = 'adadelta', 
                                   loss = 'binary_crossentropy',
@@ -34,7 +34,7 @@ setVanillaAutoencoder <- function(valProp = 0.3,
     encoderSettings <- list(model = 'fitVanillaAutoencoder',
                             valProp = valProp,
                             epochs = as.integer(epochs),
-                            batch_size = as.integer(batch_size),
+                            batchSize = as.integer(batchSize),
                             latentDim = as.integer(latentDim),
                             optimizer = optimizer,
                             loss = loss,
@@ -45,15 +45,16 @@ setVanillaAutoencoder <- function(valProp = 0.3,
 }
 
 #' Creating setting for 2-dimension convolutional autoencoder
-#' @param batch_size
+#' @param batchSize
 #' @param latentDim
 #' @param latentDim
 #' 
 #' @export
 set2DConvAutoencoder<-function(valProp = 0.3,
                                epochs = 10,
-                               batch_size = batch_size,
+                               batchSize = batchSize,
                                poolingLayerNum = 3,
+                               kernelSize = 3,
                                poolSize = 2,
                                optimizer = 'adadelta', 
                                loss = 'binary_crossentropy',
@@ -67,8 +68,9 @@ set2DConvAutoencoder<-function(valProp = 0.3,
     encoderSettings <- list(model = 'fit2DConvAutoencoder',
                             valProp = valProp,
                             epochs = as.integer(epochs),
-                            batch_size = as.integer(batch_size),
+                            batchSize = as.integer(batchSize),
                             poolingLayerNum = as.integer(poolingLayerNum),
+                            kernelSize = as.integer(kernelSize),
                             poolSize = as.integer(poolSize),
                             #latentDim = as.integer(latentDim),
                             optimizer = optimizer,

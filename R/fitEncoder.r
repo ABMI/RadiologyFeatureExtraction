@@ -22,7 +22,7 @@
 fitVanillaAutoencoder <- function(trainData,
                                   valProp,
                                   epochs = epochs,
-                                  batch_size = batch_size,
+                                  batchSize = batchSize,
                                   latentDim = latentDim,
                                   optimizer = 'adadelta', 
                                   loss = 'binary_crossentropy',
@@ -73,7 +73,7 @@ fitVanillaAutoencoder <- function(trainData,
     
     history<-autoencoder %>% fit (trainData, trainData,
                                   epochs=epochs,
-                                  batch_size=batch_size,
+                                  batchSize=batchSize,
                                   shuffle=TRUE,
                                   validation_data=list(valData, valData),
                                   #validation_split = vaeValidationSplit,
@@ -99,8 +99,9 @@ fitVanillaAutoencoder <- function(trainData,
 fit2DConvAutoencoder <- function(trainData,
                                  valProp,
                                  epochs = epochs,
-                                 batch_size = batch_size,
+                                 batchSize = batchSize,
                                  poolingLayerNum = poolingLayerNum,
+                                 kernelSize = kernelSize,
                                  poolSize = poolSize,
                                  optimizer = 'adadelta', 
                                  loss = 'binary_crossentropy',
@@ -169,21 +170,33 @@ fit2DConvAutoencoder <- function(trainData,
         
     #define the model
     encoder <- keras::keras_model_sequential()
-    encoder %>% layer_conv_2d(input_shape = originalDim, filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')
+    encoder %>% layer_conv_2d(input_shape = originalDim, filters = 16, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same')
     encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same') 
-    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same') 
+    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') 
     encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')
-    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same') 
+    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') 
     encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')
+    if (poolingLayerNum >= 4) {encoder %>% 
+        layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') %>% 
+        layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')}
+    if (poolingLayerNum == 5) {encoder %>% 
+            layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') %>% 
+            layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')}
     
     autoencoder <- encoder
-    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')
+    if (poolingLayerNum == 5) {autoencoder %>% 
+            layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') %>% 
+            layer_upsampling_2d(size = c(poolSize, poolSize))}
+    if (poolingLayerNum >= 4) {autoencoder %>% 
+            layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same') %>% 
+            layer_upsampling_2d(size = c(poolSize, poolSize))}
+    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same')
     autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
-    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')
+    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same')
     autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
-    autoencoder %>% layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')
+    autoencoder %>% layer_conv_2d(filters = 16, kernel_size = c(kernelSize,kernelSize), activation = 'relu',padding='same')
     autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
-    autoencoder %>% layer_conv_2d(filters = 1, kernel_size = c(3,3), activation = 'sigmoid',padding='same') 
+    autoencoder %>% layer_conv_2d(filters = 1, kernel_size = c(kernelSize,kernelSize), activation = 'sigmoid',padding='same') 
     
     summary(autoencoder)
     
@@ -193,7 +206,7 @@ fit2DConvAutoencoder <- function(trainData,
     #fit
     history<-autoencoder %>% fit (trainData, trainData,
                                   epochs=epochs,
-                                  batch_size=batch_size,
+                                  batchSize=batchSize,
                                   shuffle=TRUE,
                                   validation_data=list(valData, valData),
                                   #validation_split = vaeValidationSplit,
