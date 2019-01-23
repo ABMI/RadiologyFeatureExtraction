@@ -7,7 +7,7 @@ testData<-mnist$test$x
 
 ##hyperParameterSetting
 
-trainData<-trainData[1:4000,,]
+#trainData<-trainData[1:4000,,]
 testData <- testData[1:1000,,]
 
 #View the original image
@@ -18,7 +18,7 @@ sampleViewPanels <- c(2,4)
 ##Hyperparameter
 batchSize = 100
 latentDim = 10
-epochs = 10
+epochs = 300
 
 #View function
 grayViewer<-function(images,
@@ -131,7 +131,6 @@ encoderSetting<-set2DConvAutoencoder (valProp = 0.3,
                                       loss = 'binary_crossentropy',
                                       imageProcessingSettings = imageProcessingSettings)
 
-debug(fit2DConvAutoencoder)
 autoencoder<-fit2DConvAutoencoder(trainData=trainData.ordered,
                                   valProp = encoderSetting$valProp,
                                   epochs = encoderSetting$epochs,
