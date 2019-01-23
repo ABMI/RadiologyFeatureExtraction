@@ -123,32 +123,31 @@ dim(testData.ordered)
 
 #build autoencoder
 encoderSetting<-set2DConvAutoencoder (valProp = 0.3,
-                                       epochs = epochs,
-                                       batch_size = batch_size,
-                                       layer = 3,
-                                       optimizer = 'adadelta', 
-                                       loss = 'binary_crossentropy',
-                                       imageProcessingSettings = imageProcessingSettings)
+                                      epochs = epochs,
+                                      batch_size = batch_size,
+                                      poolingLayerNum = 3,
+                                      poolSize = 2,
+                                      optimizer = 'adadelta', 
+                                      loss = 'binary_crossentropy',
+                                      imageProcessingSettings = imageProcessingSettings)
 
+debug(fit2DConvAutoencoder)
 autoencoder<-fit2DConvAutoencoder(trainData=trainData.ordered,
-                                   valProp = encoderSetting$valProp,
-                                   epochs = encoderSetting$epochs,
-                                   batch_size = encoderSetting$batch_size,
-                                   #latentDim = encoderSetting$latentDim,
-                                   optimizer = encoderSetting$optimizer, 
-                                   loss = encoderSetting$loss,
-                                   imageProcessingSettings = encoderSetting$imageProcessingSettings
+                                  valProp = encoderSetting$valProp,
+                                  epochs = encoderSetting$epochs,
+                                  batch_size = encoderSetting$batch_size,
+                                  poolingLayerNum = encoderSetting$poolingLayerNum,
+                                  poolSize = encoderSetting$poolSize,
+                                  optimizer = encoderSetting$optimizer, 
+                                  loss = encoderSetting$loss,
+                                  imageProcessingSettings = encoderSetting$imageProcessingSettings
 )
-autoencoder$history$params
-autoencoder$history$metrics
 
 ##Prediction
-dim(testData.ordered)<-c(dim(testData.ordered),1)
 predicted <- predict(autoencoder$encoderModel, testData.ordered, batch_size = 100L)
 
-dim(predicted)<-c(1000,24,24)
-#predictedImages <-reconDim(predicted,imageProcessingSettings)
-predictedImages <- reverseProcessing(predicted)
+predictedImages <-reconDim(predicted,convolution=TRUE,imageProcessingSettings)
+predictedImages <- reverseProcessing(predictedImages)
 
 par(mfcol=sampleViewPanels)
 grayViewer(testData,

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+####Fit Vanilla autoencoder####
 #' Fit Vanilla autoencoder
 #' 
 #' 
@@ -28,6 +29,8 @@ fitVanillaAutoencoder <- function(trainData,
                                   imageProcessingSettings = imageProcessingSettings){
     K <- keras::backend()
     startTime <- Sys.time()
+    #early stopping
+    earlyStopping <- keras::callback_early_stopping(monitor = "val_loss", patience = 10, mode = "auto", min_delta = 1e-2)
     
     originalDim <- c(length(imageProcessingSettings$roiWidth)*length(imageProcessingSettings$roiHeight))
     
@@ -72,7 +75,9 @@ fitVanillaAutoencoder <- function(trainData,
                                   epochs=epochs,
                                   batch_size=batch_size,
                                   shuffle=TRUE,
-                                  validation_data=list(valData, valData))
+                                  validation_data=list(valData, valData),
+                                  #validation_split = vaeValidationSplit,
+                                  callbacks = list(earlyStopping))
     
     encoderModel<-list(encoderModel = autoencoder,
                        encoder = encoder,
@@ -86,7 +91,7 @@ fitVanillaAutoencoder <- function(trainData,
     return(encoderModel)
 }
 
-
+####Fit 2-dimension convolutional autoencoder####
 #' Fit 2-dimensional autoencoder
 #' 
 #' 
@@ -95,14 +100,18 @@ fit2DConvAutoencoder <- function(trainData,
                                  valProp,
                                  epochs = epochs,
                                  batch_size = batch_size,
-                                 layer = layer,
+                                 poolingLayerNum = poolingLayerNum,
+                                 poolSize = poolSize,
                                  optimizer = 'adadelta', 
                                  loss = 'binary_crossentropy',
                                  imageProcessingSettings = imageProcessingSettings){
     K <- keras::backend()
     startTime <- Sys.time()
+    #early stopping
+    earlyStopping <- keras::callback_early_stopping(monitor = "val_loss", patience = 10, mode = "auto", min_delta = 1e-2)
     
     originalDim <- c(length(imageProcessingSettings$roiWidth),length(imageProcessingSettings$roiHeight),1)
+    latentDim <- c( (length(imageProcessingSettings$roiWidth) / (poolSize^poolingLayerNum)), (length(imageProcessingSettings$roiHeight) / (poolSize^poolingLayerNum)))
     
     # Splitting train and validation
     if(valProp==0){
@@ -110,65 +119,90 @@ fit2DConvAutoencoder <- function(trainData,
     } else {
         valInd<-sample(nrow(trainData) ,round(valProp*nrow(trainData),0 ))
         
-        valData <- trainData[valInd,,]
-        trainData <- trainData [-valInd,,]
+        valData <- trainData[valInd,,,]
+        trainData <- trainData [-valInd,,,]
     }
     
     #add dimension for channel
-    dim(trainData)<-c(dim(trainData),1)
-    dim(valData)<-c(dim(valData),1)
+    if( length(dim(trainData))<=3){
+        dim(trainData)<-c(dim(trainData),1)
+    }
+    if( length(dim(valData))<=3){
+        dim(valData)<-c(dim(valData),1)
+    }
 
-    #define the model
-    input_layer <- 
-        keras::layer_input(shape = originalDim) 
-    
-    encoded<-
-        input_layer %>%
-        layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_max_pooling_2d(pool_size = c(2, 2),padding='same')%>% 
-        layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_max_pooling_2d(pool_size = c(2, 2),padding='same')%>% 
-        layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_max_pooling_2d(pool_size = c(2, 2),padding='same')
-    
-    decoded <-
-        encoded %>%
-        layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_upsampling_2d(size = c(2, 2))%>%
-        layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_upsampling_2d(size = c(2, 2))%>%
-        layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
-        layer_upsampling_2d(size = c(2, 2))%>%
-        layer_conv_2d(filters = 1, kernel_size = c(3,3), activation = 'sigmoid',padding='same') 
-    
-    # this model maps an input to its reconstruction
-    autoencoder <- keras::keras_model(input_layer, decoded)
-    #summary(autoencoder)
-    
-    #Let's also create a separate encoder model:
+    ##output calculator #outputDim = (originalDim-filterSize+2*paddingSize)/stride + 1
+    ##define the model
+    # input_layer <- 
+    #     keras::layer_input(shape = originalDim) 
+    # 
+    # encoded<-
+    #     input_layer %>%
+    #     layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')%>% 
+    #     layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')%>% 
+    #     layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')
+    # 
+    # decoded <-
+    #     encoded %>%
+    #     layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_upsampling_2d(size = c(poolSize, poolSize))%>%
+    #     layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_upsampling_2d(size = c(poolSize, poolSize))%>%
+    #     layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')%>% 
+    #     layer_upsampling_2d(size = c(poolSize, poolSize))%>%
+    #     layer_conv_2d(filters = 1, kernel_size = c(3,3), activation = 'sigmoid',padding='same') 
+    ## this model maps an input to its reconstruction
+    #autoencoder <- keras::keras_model(input_layer, decoded)
+    ##Let's also create a separate encoder model:
     # this model maps an input to its encoded representation
-    encoder <- keras::keras_model(input_layer, encoded)
-    
-    #As well as the decoder model:
-    # create a placeholder for an encoded (with latent dimension) input
+    #encoder <- keras::keras_model(input_layer, encoded)
+    ##As well as the decoder model:
+    ## create a placeholder for an encoded (with latent dimension) input
     #encodedInput <- keras::layer_input(shape = c(latentDim))
-    
-    # retrieve the last layer of the autoencoder model
+    ## retrieve the last layer of the autoencoder model
     #decoderLayer = keras::get_layer(autoencoder,index=-1)
-    # create the decoder model
+    ## create the decoder model
     #decoder <- keras::keras_model(encodedInput, decoderLayer(encodedInput))
+        
+    #define the model
+    encoder <- keras::keras_model_sequential()
+    encoder %>% layer_conv_2d(input_shape = originalDim, filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')
+    encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same') 
+    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same') 
+    encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')
+    encoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same') 
+    encoder %>% layer_max_pooling_2d(pool_size = c(poolSize, poolSize),padding='same')
     
+    autoencoder <- encoder
+    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')
+    autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
+    autoencoder %>% layer_conv_2d(filters = 8, kernel_size = c(3,3), activation = 'relu',padding='same')
+    autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
+    autoencoder %>% layer_conv_2d(filters = 16, kernel_size = c(3,3), activation = 'relu',padding='same')
+    autoencoder %>% layer_upsampling_2d(size = c(poolSize, poolSize))
+    autoencoder %>% layer_conv_2d(filters = 1, kernel_size = c(3,3), activation = 'sigmoid',padding='same') 
+    
+    summary(autoencoder)
+    
+    #compile
     autoencoder  %>% compile(optimizer = optimizer, loss = loss)
     
+    #fit
     history<-autoencoder %>% fit (trainData, trainData,
                                   epochs=epochs,
                                   batch_size=batch_size,
                                   shuffle=TRUE,
-                                  validation_data=list(valData, valData))
+                                  validation_data=list(valData, valData),
+                                  #validation_split = vaeValidationSplit,
+                                  callbacks = list(earlyStopping))
     
     encoderModel<-list(encoderModel = autoencoder,
                        encoder = encoder,
-                       history = history#,
+                       history = history,
+                       latentDim = latentDim#,
                        #decoder = decoder
     )
 }

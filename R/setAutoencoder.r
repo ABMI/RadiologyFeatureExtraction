@@ -44,7 +44,7 @@ setVanillaAutoencoder <- function(valProp = 0.3,
     return(encoderSettings)
 }
 
-#' Creating setting for 2-dimensional convolutional autoencoder
+#' Creating setting for 2-dimension convolutional autoencoder
 #' @param batch_size
 #' @param latentDim
 #' @param latentDim
@@ -53,20 +53,23 @@ setVanillaAutoencoder <- function(valProp = 0.3,
 set2DConvAutoencoder<-function(valProp = 0.3,
                                epochs = 10,
                                batch_size = batch_size,
-                               layer = 3,
+                               poolingLayerNum = 3,
+                               poolSize = 2,
                                optimizer = 'adadelta', 
                                loss = 'binary_crossentropy',
                                imageProcessingSettings = imageProcessingSettings){
     if(valProp>1 | valProp<0)
         stop ("valProp should be between 0 and 1")
     
-    if ( !(length(imageProcessingSettings$roiWidth) %/% (2^layer)==0) & (length(imageProcessingSettings$roiHeight) %/% (2^layer)==0) )
-        stop ("the length of roiWidth and roiHeight should be multipliers of 2^layer")
+    if ( !(length(imageProcessingSettings$roiWidth) %/% (poolSize^poolingLayerNum)==0) & (length(imageProcessingSettings$roiHeight) %/% (poolSize^poolingLayerNum)==0) )
+        stop ("the length of roiWidth and roiHeight should be multipliers of (poolSize)^(layerNum)")
     
     encoderSettings <- list(model = 'fit2DConvAutoencoder',
                             valProp = valProp,
                             epochs = as.integer(epochs),
                             batch_size = as.integer(batch_size),
+                            poolingLayerNum = as.integer(poolingLayerNum),
+                            poolSize = as.integer(poolSize),
                             #latentDim = as.integer(latentDim),
                             optimizer = optimizer,
                             loss = loss,
